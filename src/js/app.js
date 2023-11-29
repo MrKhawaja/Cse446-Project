@@ -80,11 +80,29 @@ App = {
     //load contract ddata
     App.contracts.MissingDiaries.deployed()
     .then( function( instance ){
-      missingDiariesInstance = instance;
-      return missingDiariesInstance.getMissingPersons();
-    }).then( function(instance){
-        console.log(instance)
-      }) 
+      missingDiariesInstance = instance
+
+      return missingDiariesInstance.missingPeopleCount();
+    }).then( function(missingPeopleCount){
+        for (let i = 1; i <= missingPeopleCount; i++) {
+          missingDiariesInstance.missingPeople(i).then(
+            function(people){
+              let id = people[0];
+              let name = people[1];
+              let age = people[2];
+              let height = people[3];
+              let status = people[4];
+              let description = people[5];
+              let division = people[6];
+              let relative = people[7];
+              // render missing people result
+              let missingPeopleResults = $("#missingPeopleResults");
+              let missingPeopleTemplate = "<tr><th>" + id + "</th><td>" + name + "</td><td>" + age + "</td><td>" + height + "</td><td>" + status + "</td><td>" + description + "</td><td>" + division + "</td><td>" + relative + "</td></tr>";
+              missingPeopleResults.append(missingPeopleTemplate);
+            }
+          )
+
+      }}) 
     .catch( function( error ){
       console.warn( error )
     });

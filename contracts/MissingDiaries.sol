@@ -34,14 +34,6 @@ contract MissingDiaries {
         emit missingPersonAdded(missingPeopleCount, _name, _age, _height, _status, _description, _division, _relative);
     }
 
-    function getMissingPersons() public view returns (MissingPerson[] memory) {
-        MissingPerson[] memory missingPersons = new MissingPerson[](missingPeopleCount);
-        for (uint i = 0; i < missingPeopleCount; i++) {
-            missingPersons[i] = missingPeople[i + 1];
-        }
-        return missingPersons;
-    }
-
     // function getMissingPerson(uint _id) public view returns (uint, string memory, uint, uint, Status, string memory, string memory, string memory) {
     //     return (_id, missingPeople[_id].name, missingPeople[_id].age, missingPeople[_id].height, missingPeople[_id].status, missingPeople[_id].description, missingPeople[_id].division, missingPeople[_id].relative);
     // }
