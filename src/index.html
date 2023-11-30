@@ -72,9 +72,37 @@
 
  </table>
  </div>
- <form onsubmit="App.castVote(); return false;" class="text-center">
+ <div class="container" style="width: 350px;">
+
+   <form onsubmit="App.addPerson(); return false;">
+    <div class="mb-3">
+      <label for="name" class="form-label">Name</label>
+      <input type="text" class="form-control" id="name">
+    </div>
+    <div class="mb-3">
+    <label for="age" class="form-label">Age</label>
+    <input type="number" class="form-control" id="age">
+  </div>
+  <div class="mb-3">
+    <label for="height" class="form-label">Height</label>
+    <input type="number" class="form-control" id="height">
+  </div>
+  <div class="mb-3">
+    <label for="description" class="form-label">Description</label>
+    <input type="text" class="form-control" id="description">
+  </div>
+  <div class="mb-3">
+    <label for="division" class="form-label">Division</label>
+    <input type="text" class="form-control" id="division">
+  </div>
+  <div class="mb-3">
+    <label for="relative" class="form-label">Relative's Phone</label>
+    <input type="text" class="form-control" id="relative">
+  </div>
+  <button type="submit" class="btn btn-primary">Add Person</button>
   
 </form>
+</div>
 
 
    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->

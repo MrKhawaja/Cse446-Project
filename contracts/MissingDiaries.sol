@@ -21,10 +21,10 @@ contract MissingDiaries {
 
     uint public missingPeopleCount;
 
-    event missingPersonAdded(uint id, string name, uint age, uint height, Status status, string description, string division, string relative);
+    event missingPersonAdded(uint indexed _missingPersonId, string _name, uint _age, uint _height, Status _status, string _description, string _division, string _relative);
 
     constructor() {
-        addMissingPerson("John Doe", 25, 180, Status.Missing, "John Doe is missing since 2nd January 2021", "Dhaka", "Jane Doe");
+        addMissingPerson("John Doe", 25, 180, Status.Found, "John Doe is missing since 2nd January 2021", "Dhaka", "Jane Doe");
         addMissingPerson("Jane Doe", 20, 160, Status.Missing, "Jane Doe is missing since 2nd January 2021", "Dhaka", "John Doe");
     }
 

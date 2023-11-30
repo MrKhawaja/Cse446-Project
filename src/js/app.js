@@ -40,7 +40,8 @@ App = {
       // connect provider to interact with contract
       App.contracts.MissingDiaries.setProvider( App.webProvider );
  
- 
+      App.listenForEvents();
+
       return App.render();
     })
  
@@ -78,60 +79,83 @@ App = {
  
  
     //load contract ddata
-    App.contracts.MissingDiaries.deployed()
-    .then( function( instance ){
-      missingDiariesInstance = instance
-
-      return missingDiariesInstance.missingPeopleCount();
-    }).then( function(missingPeopleCount){
-        for (let i = 1; i <= missingPeopleCount; i++) {
-          missingDiariesInstance.missingPeople(i).then(
-            function(people){
-              let id = people[0];
-              let name = people[1];
-              let age = people[2];
-              let height = people[3];
-              let status = people[4];
-              let description = people[5];
-              let division = people[6];
-              let relative = people[7];
-              // render missing people result
-              let missingPeopleResults = $("#missingPeopleResults");
-              let missingPeopleTemplate = "<tr><th>" + id + "</th><td>" + name + "</td><td>" + age + "</td><td>" + height + "</td><td>" + status + "</td><td>" + description + "</td><td>" + division + "</td><td>" + relative + "</td></tr>";
-              missingPeopleResults.append(missingPeopleTemplate);
-            }
-          )
-
-      }}) 
-    .catch( function( error ){
-      console.warn( error )
-    });
+    // App.contracts.MissingDiaries.deployed()
+    // .then( function( instance ){
+    //   missingDiariesInstance = instance
+      
+    //   return missingDiariesInstance.missingPeopleCount();
+    // }).then( function(missingPeopleCount){
+    //     let missingPeopleResults = $("#missingPeopleResults");
+    //     missingPeopleResults.empty();
+    //     for (let i = 1; i <= missingPeopleCount.c[0]; i++) {
+    //       missingDiariesInstance.missingPeople(i).then(
+    //         function(people){
+    //           let id = people[0];
+    //           let name = people[1];
+    //           let age = people[2];
+    //           let height = people[3];
+    //           let status = people[4].c[0] === 0? "Missing" : "Found";
+    //           let description = people[5];
+    //           let division = people[6];
+    //           let relative = people[7];
+    //           // render missing people result
+    //           let missingPeopleTemplate = "<tr><th>" + id + "</th><td>" + name + "</td><td>" + age + "</td><td>" + height + "</td><td>" + status + "</td><td>" + description + "</td><td>" + division + "</td><td>" + relative + "</td></tr>";
+    //           missingPeopleResults.append(missingPeopleTemplate);
+    //         }
+    //       )
+    //     }
+    //   loader.hide();
+    //   content.show();
+    // }) 
+    // .catch( function( error ){
+    //   console.warn( error )
+    // });
   },
  
   addPerson: function(){
     let name = $("#name").val();
     let age = $("#age").val();
     let height = $("#height").val();
-    let status = $("#status").val();
+    let status = 0;
     let description = $("#description").val();
     let division = $("#division").val();
     let relative = $("#relative").val();
+    console.log(name, age, height, status, description, division, relative)
+    App.contracts.MissingDiaries.deployed()
+    .then( function( instance ){
+      return instance.addMissingPerson(name, age, height, status, description, division, relative, {from: App.account[0]})
+    }).catch( function( error ){
+      console.warn( error )
+    });
   },
   // voted event
-//  listenForEvents: function(){
-//   App.contracts.MissingDiaries.deployed()
-//   .then( function( instance ){
-//     instance.votedEvent({}, {
-//       fromBlock: 0,
-//       toBlock: "latests"
-//     })
-//     .watch( function( err, event ){
-//       console.log("Triggered", event);
-//       // reload page
-//       App.render()
-//     })
-//   })
-// }
+ listenForEvents: function(){
+  App.contracts.MissingDiaries.deployed()
+  .then( function( instance ){
+    instance.missingPersonAdded(
+      {},
+      {
+        fromBlock: 0,
+        toBlock: 'latest'
+      }
+    ).watch( function( error, event ){
+      let missingPeopleResults = $("#missingPeopleResults");
+      let id = event.args._missingPersonId.c[0];
+      let name = event.args._name;
+      let age = event.args._age.c[0];
+      let height = event.args._height.c[0];
+      let status = event.args._status.c[0] === 0? "Missing" : "Found";
+      let description = event.args._description;
+      let division = event.args._division;
+      let relative = event.args._relative;
+      let missingPeopleTemplate = "<tr><th>" + id + "</th><td>" + name + "</td><td>" + age + "</td><td>" + height + "</td><td>" + status + "</td><td>" + description + "</td><td>" + division + "</td><td>" + relative + "</td></tr>";
+      missingPeopleResults.append(missingPeopleTemplate);
+    }
+    )
+
+    
+  })
+}
 
  
  };
