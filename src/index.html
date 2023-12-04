@@ -103,7 +103,48 @@
   
 </form>
 </div>
+<!-- <h2>Select a Division</h2>
 
+<form onsubmit="App.searchPerson()">
+<label for="division">Choose a division:</label>
+    <select id="division">
+        <option value="Dhaka">Dhaka</option>
+        <option value="Chittagong">Chittagong</option>
+        <option value="Rajshahi">Rajshahi</option>
+        <option value="Khulna">Khulna</option>
+        <option value="Barisal">Barisal</option>
+        <option value="Sylhet">Sylhet</option>
+        <option value="Rangpur">Rangpur</option>
+        <option value="Mymensingh">Mymensingh</option>
+      </select>
+
+      <button type="submit" class="btn btn-primary">Search</button>
+</form> -->
+<form onsubmit="App.searchPerson(); return false;">
+  <select id="filter" class="form-select">
+    <option selected>Select District</option>
+    <option value="Dhaka">Dhaka</option>
+    <option value="Chittagong">Chittagong</option>
+  </select>
+  <button type="submit">Search</button>
+</form>
+<table  class="table table-dark table-hover">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Name</th>
+      <th scope="col">Age</th>
+      <th scope="col">Height</th>
+      <th scope="col">Status</th>
+      <th scope="col">Description</th>
+      <th scope="col">Division</th>
+      <th scope="col">Relative</th>
+    </tr>
+  </thead>
+  <tbody id="searchResult">
+  </tbody>
+
+ </table>
 
    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>

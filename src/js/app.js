@@ -2,7 +2,7 @@ App = {
   webProvider: null,
   contracts: {},
   account: '0x0',
- 
+  admin: '0xD907c577f266D30bad083D2AD241184c0C2481c5',
  
   init: function() {
     return App.initWeb();
@@ -23,8 +23,7 @@ App = {
       // specify default instance if no web3 instance provided
       App.webProvider = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
     }
- 
- 
+
     return App.initContract();
   },
  
@@ -128,6 +127,43 @@ App = {
       console.warn( error )
     });
   },
+
+  searchPerson: function(){
+    // let division = $("#division").val();
+    let divisionToSearch = $("#filter").val(); // Specify the division to search
+    App.contracts.MissingDiaries.deployed()
+      .then(function(instance){
+        personInstance = instance;
+        instance.missingPeopleCount()
+        .then(function(count){
+          var searchResult = $("#searchResult")
+          searchResult.empty();
+          for (let i = 1; i <= count; i++) {
+            personInstance.missingPeople(i).then(
+              function(person){
+                let division = person[6];
+                // Check if the division matches the one to search
+                if (division === divisionToSearch) {
+                  let id = person[0];
+                  let name = person[1];
+                  let age = person[2];
+                  let height = person[3];
+                  let status = person[4] === 0 ? "Missing" : "Found";
+                  let description = person[5];
+                  let relative = person[6];
+                  let missingPeopleT = "<tr><th>" + id + "</th><td>" + name + "</td><td>" + age + "</td><td>" + height + "</td><td>" + status + "</td><td>" + description + "</td><td>" + division + "</td><td>" + relative + "</td></tr>";
+                  searchResult.append(missingPeopleT);
+              }
+            }
+            )
+          }
+        })
+      })
+      .catch(function(error){
+        console.error('Error searching for missing persons:', error);
+      });
+  },
+  
   // voted event
  listenForEvents: function(){
   App.contracts.MissingDiaries.deployed()
