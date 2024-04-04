@@ -22,6 +22,7 @@ contract MissingDiaries {
     uint public missingPeopleCount;
 
     event missingPersonAdded(uint indexed _missingPersonId, string _name, uint _age, uint _height, Status _status, string _description, string _division, string _relative);
+    event statusToggled(uint indexed _missingPersonId, Status _newStatus);
 
     constructor() {
         addMissingPerson("John Doe", 25, 180, Status.Found, "John Doe is missing since 2nd January 2021", "Dhaka", "Jane Doe");
@@ -34,60 +35,28 @@ contract MissingDiaries {
         emit missingPersonAdded(missingPeopleCount, _name, _age, _height, _status, _description, _division, _relative);
     }
 
-    // function getMissingPerson(uint _id) public view returns (uint, string memory, uint, uint, Status, string memory, string memory, string memory) {
-    //     return (_id, missingPeople[_id].name, missingPeople[_id].age, missingPeople[_id].height, missingPeople[_id].status, missingPeople[_id].description, missingPeople[_id].division, missingPeople[_id].relative);
-    // }
+    function foundPerson(uint _id) public {
+        // msg.sender;
+        missingPeople[_id].status = Status.Found;
+    }
 
+    function getCount() public view returns (uint[8] memory) {
+        string[8] memory districts = ["Dhaka", "Chattogram", "Rajshahi", "Khulna", "Barisal", "Sylhet", "Rangpur", "Mymensingh"];
+        uint[8] memory result;
+        for (uint i = 0; i < 8; i++) {
+            result[i] = getCountByDistrict(districts[i]);
+        }
+        return result;
+    }
 
-//    event votedEvent( uint indexed _candidateId );
-//    // model a candidate
-//    struct Candidate {
-//        uint id;
-//        string name;
-//        uint voteCount;
-//    }
-//    // Store accounts that have voted
-//    mapping( address => bool ) public voters;
+    function getCountByDistrict(string memory _district) public view returns (uint) {
+        uint counter = 0;
+        for (uint i = 1; i <= missingPeopleCount; i++) {
+            if ((keccak256(bytes(missingPeople[i].division)) == keccak256(bytes(_district))) && (missingPeople[i].status == Status.Missing)) {
+                counter++;
+            }
+        }
+        return counter;
+    }
 
-
-//    // Read/write candidates
-//    mapping( uint => Candidate ) public candidates;
-
-
-//    // store candidates count
-//    uint public candidatesCount;
-
-
-//    // Constructor
-//    constructor() {
-//        addCandidate( "Candidate 1" );
-//        addCandidate( "Candidate 2" );
-//    }
-
-
-//    // adding candidates
-//    function addCandidate( string memory _name ) private {
-//        candidatesCount++;
-//        candidates[ candidatesCount ] = Candidate( candidatesCount, _name, 0 );
-//    }
-
-
-//    // cast vote
-//    function vote( uint _candidateId ) public {
-//        // require that the current voter haven't voted before
-//        require( !voters[ msg.sender ]);
-
-
-//        // candidate should be valid
-//        require( _candidateId > 0 && _candidateId <= candidatesCount );
-
-
-//        // record voters vote
-//        voters[ msg.sender ] = true;
-
-
-//        // update candidates vote count
-//        candidates[ _candidateId ].voteCount++;
-//        emit votedEvent( _candidateId );
-//               }
 }

@@ -1,7 +1,7 @@
 // requiring the contract
-var MissingDiaries = artifacts.require("./MissingDiaries.sol");
+var PatientManagement = artifacts.require("./PatientManagement.sol");
 
 // exporting as module 
  module.exports = function(deployer) {
-  deployer.deploy(MissingDiaries);
+  deployer.deploy(PatientManagement);
  };

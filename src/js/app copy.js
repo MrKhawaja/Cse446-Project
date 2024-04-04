@@ -31,13 +31,13 @@ App = {
   initContract: function() {
 
 
-    $.getJSON("PatientManagement.json", function( patientManagement ){
+    $.getJSON("MissingDiaries.json", function( missingDiaries ){
       // instantiate a new truffle contract from the artifict
-      App.contracts.PatientManagement = TruffleContract( patientManagement );
+      App.contracts.MissingDiaries = TruffleContract( missingDiaries );
  
  
       // connect provider to interact with contract
-      App.contracts.PatientManagement.setProvider( App.webProvider );
+      App.contracts.MissingDiaries.setProvider( App.webProvider );
  
       
       return App.render();
@@ -50,14 +50,15 @@ App = {
  
  
   render: async function(){
-    let patientManagementInstance;
+    let missingDiariesInstance;
     const loader = $("#loader");
     const content = $("#content");
+    var admin = '0x730df5253905e4d3e39d8ff3272e69ce2975be36';
  
  
     loader.show();
     content.hide();
-    $("#updateUserForm").hide();
+   
     // load account data
     if (window.ethereum) {
       try {
@@ -66,7 +67,17 @@ App = {
         App.account = accounts;
         $("#accountAddress").html("Your Account: " + App.account);
         console.log(App.account)
-        
+        if (App.account[0] === admin) {
+          $("#missingRes").show();
+          $("#addPeopleForm").hide();
+          $("#divisionD").hide();
+          $("#divisionRes").hide();
+        }
+        else {
+          $("#admin").hide();
+          $("#adminU").hide();
+          $("#missing").hide();
+      }
     } catch (error) {
         if (error.code === 4001) {
           // User rejected request
@@ -77,58 +88,72 @@ App = {
       }
     }
 
-    App.contracts.PatientManagement.deployed()
+    App.contracts.MissingDiaries.deployed()
     .then( function( instance ){
-      instance;
-      return instance.checkAdmin({from: App.account[0]});
-    }).then( function( is_admin ){
-      if(is_admin){
-        $("#updateUserForm").show();
-      }
-    }).then( function(){
-      loader.hide();
-      content.show();
-    }).catch( function( error ){ 
-      console.warn( error )
-    })
+      missingDiariesInstance = instance;
+      return missingDiariesInstance.missingPeopleCount();
+    }).then( function( missingPeopleCount ){
+      var missingPeopleResults = $("#missingPeopleResults");
+      for( let i = 1; i <= missingPeopleCount; i++ ){
+        missingDiariesInstance.missingPeople(i)
+        .then( function( person ){
+          let id = person[0];
+          if (id > App.lastId) {
+            App.lastId = id;}
+          let name = person[1];
+          let age = person[2];
+          let height = person[3];
+          let status = person[4].c[0] === 0 ? "Missing" : "Found";
+          let description = person[5];
+          let division = person[6];
+          let relative = person[7];
+          let missingPeopleTemplate = "<tr><th>" + id + "</th><td>" + name + "</td><td>" + age + "</td><td>" + height + "</td><td>" + status + "</td><td>" + description + "</td><td>" + division + "</td><td>" + relative + "</td></tr>";
+          $("#missingPeopleResults").append(missingPeopleTemplate);
+        })
+      }}).then( function(){
+        loader.hide();
+        content.show();
+        App.listenForEvents();
+      }).catch( function( error ){ 
+        console.warn( error )
+      })
+
 
  
   },
  
-  addUser: function(){
-    let gender = $("#gender").val();
+  addPerson: function(){
+    let name = $("#name").val();
     let age = $("#age").val();
-    let vaccine_status = $("#vaccine_status").val();
-    let symptoms_details = $("#symptoms_details").val();
-    let district = $("#district").val();
-    let is_dead = $("#is_dead").val();
-    vaccine_status = parseInt(vaccine_status);
-    console.log(gender, age , vaccine_status, symptoms_details, district, is_dead)
-    App.contracts.PatientManagement.deployed()
+    let height = $("#height").val();
+    let status = 0;
+    let description = $("#description").val();
+    let division = $("#division").val();
+    let relative = $("#relative").val();
+    console.log(name, age, height, status, description, division, relative)
+    App.contracts.MissingDiaries.deployed()
     .then( function( instance ){
-      return instance.addUser(age, gender, vaccine_status, district, symptoms_details, is_dead, {from: App.account[0]})
+      return instance.addMissingPerson(name, age, height, status, description, division, relative, {from: App.account[0]})
     }).catch( function( error ){
       console.warn( error )
     });
   },
 
-  updateUser: function(){
-    let vaccine_status = $("#uvaccine_status").val();
-    let address = $("#uaddress").val();
-    let is_dead = $("#uis_dead").val();
-    App.contracts.PatientManagement.deployed()
-    .then( function( instance ){
-      return instance.updateUser(address, vaccine_status, is_dead, {from: App.account[0]})
-    }).catch( function( error ){
-      console.warn( error )
-    });
-
+  changeStatus: function(){
+    let id = $("#id").val();
+    let idCheck = parseInt(id);
+    console.log('called')
+    App.contracts.MissingDiaries.deployed()
+    .then(function(instance){
+      console.log(idCheck)
+      return instance.foundPerson(idCheck, {from: App.account[0]})
+    })
   },
 
   searchPerson: function(){
     // let division = $("#division").val();
     let divisionToSearch = $("#filter").val(); // Specify the division to search
-    App.contracts.PatientManagement.deployed()
+    App.contracts.MissingDiaries.deployed()
       .then(function(instance){
         personInstance = instance;
         instance.missingPeopleCount()
@@ -164,7 +189,7 @@ App = {
 
 
   getMissingCounts: function(){
-    App.contracts.PatientManagement.deployed()
+    App.contracts.MissingDiaries.deployed()
     .then( function( instance ){
       
       let divisions = ["Dhaka", "Chattogram", "Rajshahi", "Khulna", "Barisal", "Sylhet", "Rangpur", "Mymensingh"];
@@ -206,7 +231,7 @@ App = {
   
   // voted event
  listenForEvents: function(){
-  App.contracts.PatientManagement.deployed()
+  App.contracts.MissingDiaries.deployed()
   .then( function( instance ){
     instance.missingPersonAdded(
       {},
@@ -232,7 +257,7 @@ App = {
     )
 
     let statusToSearch = 'Missing';
-    App.contracts.PatientManagement.deployed()
+    App.contracts.MissingDiaries.deployed()
       .then(function(instance){
         personInstance = instance;
         instance.missingPeopleCount()
