@@ -79,7 +79,6 @@ App = {
 
     App.contracts.PatientManagement.deployed()
     .then( function( instance ){
-      instance;
       return instance.checkAdmin({from: App.account[0]});
     }).then( function( is_admin ){
       if(is_admin){
@@ -88,13 +87,82 @@ App = {
     }).then( function(){
       loader.hide();
       content.show();
+      App.listenForEvents();
     }).catch( function( error ){ 
       console.warn( error )
     })
 
+    App.contracts.PatientManagement.deployed()
+    .then( function( instance ){
+      return instance.getDeathRate();
+    }).then( function( rate ){
+      $("#death-rate").html(rate.c[0]);
+    }).then( function(){
+      loader.hide();
+      content.show();
+    }).catch( function( error ){ 
+      console.warn( error )
+    })
+
+    App.contracts.PatientManagement.deployed()
+    .then( function( instance ){
+      return instance.getHighestPatient();
+    }).then( function( district ){
+      $("#death-district").html(district);
+    }).then( function(){
+      loader.hide();
+      content.show();
+    }).catch( function( error ){ 
+      console.warn( error )
+    })
+
+    App.contracts.PatientManagement.deployed()
+    .then( function( instance ){
+       patientManagementInstance = instance;
+      return instance.getDistricts();
+    }).then( function( districts){
+      districts.shift();
+      districts.forEach(function(district){
+        $("#districts").append("<th>" + district + "</th>");
+      })
+      return patientManagementInstance.getAllMedianAge();
+    }).then(function(medians){
+      medians.shift();
+      medians.forEach(function(median){
+        $("#medians").append("<td>" + median.c[0] + "</td>");
+      })
+    }).then( function(){
+      loader.hide();
+      content.show();
+    }).catch( function( error ){ 
+      console.warn( error )
+    })
+
+    App.contracts.PatientManagement.deployed()
+    .then( function( instance ){
+      patientManagementInstance = instance;
+      return instance.getCategoryPercentage();
+    }).then( function( category ){
+      category.shift();
+      category.forEach(function(cat){
+        $("#category").append("<td>" + cat + "</td>");
+      })
+      return patientManagementInstance.getEligibleForCertificate({from: App.account[0]});
+    }).then(function(o){
+      console.log(o)
+      if(o){
+        $("#get-cert").html('<button class="btn btn-primary" onclick="App.downloadCert(); return false">Get Certificate</button>');}
+    }).then( function(){
+      loader.hide();
+      content.show();
+    }).catch( function( error ){ 
+      console.warn( error )
+    })
  
   },
- 
+  downloadCert: function(){
+    $("#content").html("<h1>THIS IS YOUR CERTIFICATE</h1><h1>THIS IS YOUR CERTIFICATE</h1><h1>THIS IS YOUR CERTIFICATE</h1><h1>THIS IS YOUR CERTIFICATE</h1>")
+  },
   addUser: function(){
     let gender = $("#gender").val();
     let age = $("#age").val();
@@ -106,7 +174,7 @@ App = {
     console.log(gender, age , vaccine_status, symptoms_details, district, is_dead)
     App.contracts.PatientManagement.deployed()
     .then( function( instance ){
-      return instance.addUser(age, gender, vaccine_status, district, symptoms_details, is_dead, {from: App.account[0]})
+      return instance.addUser(age, gender, vaccine_status, district, symptoms_details, is_dead == "true", {from: App.account[0]})
     }).catch( function( error ){
       console.warn( error )
     });
@@ -118,150 +186,30 @@ App = {
     let is_dead = $("#uis_dead").val();
     App.contracts.PatientManagement.deployed()
     .then( function( instance ){
-      return instance.updateUser(address, vaccine_status, is_dead, {from: App.account[0]})
+      return instance.updateUser(address, vaccine_status, is_dead == "true", {from: App.account[0]})
     }).catch( function( error ){
       console.warn( error )
     });
 
   },
 
-  searchPerson: function(){
-    // let division = $("#division").val();
-    let divisionToSearch = $("#filter").val(); // Specify the division to search
-    App.contracts.PatientManagement.deployed()
-      .then(function(instance){
-        personInstance = instance;
-        instance.missingPeopleCount()
-        .then(function(count){
-          var searchResult = $("#searchResult")
-          searchResult.empty();
-          for (let i = 1; i <= count; i++) {
-            personInstance.missingPeople(i).then(
-              function(person){
-                let division = person[6];
-                // Check if the division matches the one to search
-                if (division === divisionToSearch) {
-                  let id = person[0];
-                  let name = person[1];
-                  let age = person[2];
-                  let height = person[3];
-                  let status = person[4].c[0] === 0 ? "Missing" : "Found";
-                  let description = person[5];
-                  let division = person[6];
-                  let relative = person[7];
-                  let missingPeopleT = "<tr><th>" + id + "</th><td>" + name + "</td><td>" + age + "</td><td>" + height + "</td><td>" + status + "</td><td>" + description + "</td><td>" + division + "</td><td>" + relative + "</td></tr>";
-                  searchResult.append(missingPeopleT);
-              }
-            }
-            )
-          }
-        })
-      })
-      .catch(function(error){
-        console.error('Error searching for missing persons:', error);
-      });
-  },
-
-
-  getMissingCounts: function(){
-    App.contracts.PatientManagement.deployed()
-    .then( function( instance ){
-      
-      let divisions = ["Dhaka", "Chattogram", "Rajshahi", "Khulna", "Barisal", "Sylhet", "Rangpur", "Mymensingh"];
-      let data = []
-      instance.getCount().then(
-        function(result){
-          var divisionCount = $("#divisionCount")
-          divisionCount.empty();
-          for (let i = 0; i < divisions.length; i++) {
-            data.push({division:divisions[i],count: result[i].c[0]});
-          }
-          data.sort(function(a, b){return b.count - a.count});
-          data.forEach(function(item){
-            let division = item.division;
-            let count = item.count;
-            let missingPeopleT = "<tr><th>" + division + "</th><td>" + count + "</td></tr>";
-            divisionCount.append(missingPeopleT);
-          })
-          data = data.filter(function(item){
-            return item.count >0;
-          })
-          const n = data.length;
-          if (n%2==0){
-            var median = (data[n/2].count + data[(n/2)-1].count)/2;
-          }else{
-            var median = data[Math.floor(n/2)].count;
-          }
-          $("#median").html("Median: " + median);
-
-        }
-      
-      )
-      
-        
-    })
-    .catch( function( error ){
-        console.log( error )})
-  },
   
-  // voted event
  listenForEvents: function(){
   App.contracts.PatientManagement.deployed()
   .then( function( instance ){
-    instance.missingPersonAdded(
+    instance.deathRateUpdated(
       {},
       {
         fromBlock: 0,
         toBlock: 'latest'
       }
     ).watch( function( error, event ){
-      let missingPeopleResults = $("#missingPeopleResults");
-      let id = event.args._missingPersonId.c[0];
-      if (id > App.lastId) {
-      App.lastId = id;
-      let name = event.args._name;
-      let age = event.args._age.c[0];
-      let height = event.args._height.c[0];
-      let status = event.args._status.c[0] === 0? "Missing" : "Found";
-      let description = event.args._description;
-      let division = event.args._division;
-      let relative = event.args._relative;
-      let missingPeopleTemplate = "<tr><th>" + id + "</th><td>" + name + "</td><td>" + age + "</td><td>" + height + "</td><td>" + status + "</td><td>" + description + "</td><td>" + division + "</td><td>" + relative + "</td></tr>";
-      missingPeopleResults.append(missingPeopleTemplate);}
+      if( !error ){
+        $("#death-rate").html(event.args.count.c[0]);
+        console.log('Death rate updated')
+      }
     }
     )
-
-    let statusToSearch = 'Missing';
-    App.contracts.PatientManagement.deployed()
-      .then(function(instance){
-        personInstance = instance;
-        instance.missingPeopleCount()
-        .then(function(count){
-          let missingResults = $("#missingRes")
-          missingResults.empty();
-          for (let i = 1; i <= count; i++) {
-            personInstance.missingPeople(i).then(
-              function(person){
-                let status = person[4].c[0] === 0 ? "Missing" : "Found";
-                // Check if the division matches the one to search
-                if (status === statusToSearch) {
-                  let id = person[0];
-                  let name = person[1];
-                  let age = person[2];
-                  let height = person[3];
-                  let status = person[4].c[0] === 0 ? "Missing" : "Found";
-                  let description = person[5];
-                  let division = person[6];
-                  let relative = person[7];
-                  let missingPeopleT = "<tr><th>" + id + "</th><td>" + name + "</td><td>" + age + "</td><td>" + height + "</td><td>" + status + "</td><td>" + description + "</td><td>" + division + "</td><td>" + relative + "</td></tr>";
-                  missingResults.append(missingPeopleT);
-          }
-        });
-      }})
-  })
-  .catch(function(error){
-    console.error('Error searching for missing persons:', error);
-  });
 })
  }
  
